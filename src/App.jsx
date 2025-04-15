@@ -1,35 +1,98 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+
+import React, { useState } from "react";
+import NewExpense from "./NewExpense";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [expenses, setExpenses] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortAlphabetically, setSortAlphabetically] = useState(false);
+
+  const handleAddExpense = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const newExpense = {
+      id: Date.now(),
+      name: form.name.value,
+      description: form.description.value,
+      category: form.category.value,
+      amount: parseFloat(form.amount.value),
+      date: form.date.value,
+    };
+    setExpenses([newExpense, ...expenses]);
+    form.reset();
+  };
+
+  const handleDeleteExpense = (id) => {
+    setExpenses((prev) => prev.filter((expense) => expense.id !== id));
+  };
+
+  const filteredExpenses = expenses
+    .filter((expense) =>
+      expense.name.toLowerCase().includes(searchQuery.toLowerCase()) || expense.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortAlphabetically) return 0;
+      return a.name.localeCompare(b.name);
+    });
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app-container">
+      <div className="form-container">
+        <h2>Add New Expense</h2>
+        <form onSubmit={handleAddExpense} className="expense-form">
+          <input type="text" name="name" placeholder="Name" required />
+          <input type="text" name="description" placeholder="Description" required />
+          <input type="text" name="category" placeholder="Category" required />
+          <input type="number" name="amount" placeholder="Amount" required />
+          <input type="date" name="date" required />
+          <button type="submit">Add Expense</button>
+        </form>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+
+      <div className="expenses-container">
+        <input
+          type="text"
+          placeholder="Search by name..."
+          className="search-bar"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+
+        <label className="sort-toggle">
+          <input
+            type="checkbox"
+            checked={sortAlphabetically}
+            onChange={(e) => setSortAlphabetically(e.target.checked)}
+          />
+          Sort
+        </label>
+
+        <h2>All Expenses</h2>
+        <table className="expenses-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredExpenses.map((expense) => (
+              <NewExpense
+                key={expense.id}
+                expense={expense}
+                onDelete={() => handleDeleteExpense(expense.id)}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
